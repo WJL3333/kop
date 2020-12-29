@@ -23,6 +23,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.streamnative.pulsar.handlers.kop.coordinator.group.GroupConfig;
 import io.streamnative.pulsar.handlers.kop.coordinator.group.GroupCoordinator;
 import io.streamnative.pulsar.handlers.kop.coordinator.group.OffsetConfig;
+import io.streamnative.pulsar.handlers.kop.coordinator.transaction.TransactionConfig;
+import io.streamnative.pulsar.handlers.kop.coordinator.transaction.TransactionCoordinator;
 import io.streamnative.pulsar.handlers.kop.utils.ConfigurationUtils;
 import io.streamnative.pulsar.handlers.kop.utils.KopTopic;
 import io.streamnative.pulsar.handlers.kop.utils.MetadataUtils;
@@ -194,6 +196,8 @@ public class KafkaProtocolHandler implements ProtocolHandler {
     @Getter
     private GroupCoordinator groupCoordinator;
     @Getter
+    private TransactionCoordinator transactionCoordinator;
+    @Getter
     private String bindAddress;
 
 
@@ -252,6 +256,7 @@ public class KafkaProtocolHandler implements ProtocolHandler {
             try {
                 initGroupCoordinator(brokerService);
                 startGroupCoordinator();
+                initTransactionCoordinator();
                 // and listener for Offset topics load/unload
                 brokerService.pulsar()
                     .getNamespaceService()
@@ -259,6 +264,13 @@ public class KafkaProtocolHandler implements ProtocolHandler {
                         new OffsetAndTopicListener(brokerService, kafkaConfig, groupCoordinator));
             } catch (Exception e) {
                 log.error("initGroupCoordinator failed with", e);
+            }
+        }
+        if (kafkaConfig.isEnableTransactionCoordinator()) {
+            try {
+                initTransactionCoordinator();
+            } catch (Exception e) {
+                log.error("Initialized transaction coordinator failed.", e);
             }
         }
     }
@@ -288,6 +300,7 @@ public class KafkaProtocolHandler implements ProtocolHandler {
                         new KafkaChannelInitializer(brokerService.pulsar(),
                             kafkaConfig,
                             groupCoordinator,
+                            transactionCoordinator,
                             false));
                 } else if (listener.startsWith(SSL_PREFIX)) {
                     builder.put(
@@ -295,6 +308,7 @@ public class KafkaProtocolHandler implements ProtocolHandler {
                         new KafkaChannelInitializer(brokerService.pulsar(),
                             kafkaConfig,
                             groupCoordinator,
+                            transactionCoordinator,
                             true));
                 } else {
                     log.error("Kafka listener {} not supported. supports {} and {}",
@@ -359,6 +373,11 @@ public class KafkaProtocolHandler implements ProtocolHandler {
         } else {
             log.error("Failed to start group coordinator. Need init it first.");
         }
+    }
+
+    public void initTransactionCoordinator() throws Exception {
+        TransactionConfig transactionConfig = TransactionConfig.builder().build();
+        this.transactionCoordinator = TransactionCoordinator.of(transactionConfig);
     }
 
     /**

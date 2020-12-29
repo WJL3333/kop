@@ -68,4 +68,22 @@ public class KafkaEntryFormatter implements EntryFormatter {
         });
         return builder.build();
     }
+
+    private MemoryRecords getBatchesMemoryRecords(List<Entry> entries, byte magic) {
+        int size = 0;
+        for (Entry entry : entries) {
+            size += entry.getLength();
+        }
+        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+
+        entries.forEach(entry ->  {
+            final ByteBuf byteBuf = entry.getDataBuffer();
+            Commands.skipMessageMetadata(byteBuf);
+            byteBuffer.put(ByteBufUtils.getNioBuffer(byteBuf));
+        });
+
+        byteBuffer.flip();
+        return MemoryRecords.readableRecords(byteBuffer);
+    }
+
 }

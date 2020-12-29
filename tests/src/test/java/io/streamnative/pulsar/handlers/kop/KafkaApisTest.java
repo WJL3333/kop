@@ -30,6 +30,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.streamnative.pulsar.handlers.kop.KafkaCommandDecoder.KafkaHeaderAndRequest;
 import io.streamnative.pulsar.handlers.kop.coordinator.group.GroupCoordinator;
+import io.streamnative.pulsar.handlers.kop.coordinator.transaction.TransactionCoordinator;
 import io.streamnative.pulsar.handlers.kop.utils.MessageIdUtils;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -132,11 +133,13 @@ public class KafkaApisTest extends KopProtocolHandlerTestBase {
 
         ProtocolHandler handler = pulsar.getProtocolHandlers().protocol("kafka");
         GroupCoordinator groupCoordinator = ((KafkaProtocolHandler) handler).getGroupCoordinator();
+        TransactionCoordinator transactionCoordinator = ((KafkaProtocolHandler) handler).getTransactionCoordinator();
 
         kafkaRequestHandler = new KafkaRequestHandler(
             pulsar,
             (KafkaServiceConfiguration) conf,
             groupCoordinator,
+            transactionCoordinator,
             false);
         ChannelHandlerContext mockCtx = mock(ChannelHandlerContext.class);
         Channel mockChannel = mock(Channel.class);

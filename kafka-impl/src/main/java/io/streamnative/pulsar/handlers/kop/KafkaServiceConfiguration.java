@@ -44,6 +44,9 @@ public class KafkaServiceConfiguration extends ServiceConfiguration {
 
     @Category
     private static final String CATEGORY_KOP_SSL = "Kafka on Pulsar SSL configuration";
+
+    @Category
+    private static final String CATEGORY_KOP_TRANSACTION = "Kafka on Pulsar transaction";
     //
     // --- Kafka on Pulsar Broker configuration ---
     //
@@ -254,4 +257,10 @@ public class KafkaServiceConfiguration extends ServiceConfiguration {
             doc = "The format of an entry. Default: pulsar. Optional: [pulsar, kafka]"
     )
     private String entryFormat = "pulsar";
+    @FieldContext(
+            category = CATEGORY_KOP_TRANSACTION,
+            doc = "Flag to enable transaction coordinator"
+    )
+    private boolean enableTransactionCoordinator = false;
+
 }
